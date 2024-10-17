@@ -10,7 +10,7 @@ using NewAcupuntura;
 
 namespace NewAcupuntura.Migrations
 {
-    [DbContext(typeof(JourneyDbContext))]
+    [DbContext(typeof(AcupunturaDbContext))]
     [Migration("20241013182846_iniciandoDB")]
     partial class iniciandoDB
     {

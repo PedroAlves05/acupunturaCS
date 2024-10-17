@@ -13,9 +13,9 @@ namespace NewAcupuntura.Entities
         public int Id { get; set; } // Chave primária
 
         // Relacionamento com a tabela de Usuários
-        [ForeignKey("Usuario")]
-        public int UsuarioId { get; set; }
-        public Usuario? Usuario { get; set; } // Assumindo que a model de usuário já está definida
+        [ForeignKey("ApplicationUser")]
+        public string? UsuarioId { get; set; }
+        public ApplicationUser? Usuario { get; set; } // Assumindo que a model de usuário já está definida
 
         // Relacionamento com a tabela de Exames
         [ForeignKey("Exame")]

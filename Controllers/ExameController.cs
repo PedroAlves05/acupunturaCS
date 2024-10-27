@@ -29,6 +29,7 @@ namespace NewAcupuntura.Controllers
             {
                 Nome = request.Nome,
                 Preco = request.Preco,
+                Descricao = request.Descricao,
                 Duracao = request.Duracao
             };
 
@@ -49,11 +50,32 @@ namespace NewAcupuntura.Controllers
                     Id = exame.Id,
                     Nome = exame.Nome,
                     Preco = exame.Preco,
+                    Descricao = exame.Descricao,
                     Duracao = exame.Duracao
                 }).ToList()
             };
 
             return Ok(response);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeletarExame(int id)
+        {
+            // Procura o exame pelo ID fornecido
+            var exame = _context.Exames.Find(id);
+
+            if (exame == null)
+            {
+                // Se não encontrar, retorna 404 Not Found
+                return NotFound(new { Message = "Exame não encontrado." });
+            }
+
+            // Remove o exame encontrado
+            _context.Exames.Remove(exame);
+            _context.SaveChanges();
+
+            // Retorna 204 No Content para indicar que a operação foi bem-sucedida
+            return NoContent();
         }
     }
 }

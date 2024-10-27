@@ -11,6 +11,8 @@ namespace NewAcupuntura.responses
 
         public string? Nome { get; set; }
         
+        public string? Descricao { get; set; }
+
         public float Preco { get; set; }
 
         public TimeSpan Duracao { get; set; }

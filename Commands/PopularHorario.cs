@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +14,7 @@ namespace NewAcupuntura.Commands
         {
             _context = context;
         }
+
         public async Task PopularHorariosAsync(int numeroDeDias, int intervaloDeTempo)
         {
             // Data inicial
@@ -34,7 +34,7 @@ namespace NewAcupuntura.Commands
                 while (hora < horaFinal)
                 {
                     // Verifica se já existe um horário cadastrado
-                    if (!await _context.Horarios.AnyAsync(h => h.Data == data && h.Hora == hora))
+                    if (!await _context.Horarios.AnyAsync(h => h.Data.Date == data && h.Disponivel == disponivel))
                     {
                         // Define disponível como False se o horário estiver entre 12:00 e 13:00
                         if ((hora >= new TimeSpan(12, 0, 0) && hora < new TimeSpan(13, 0, 0)) ||
@@ -43,11 +43,11 @@ namespace NewAcupuntura.Commands
                             disponivel = false;
                         }
 
+                        // Cria um novo objeto Horario com base na nova model
                         var horario = new Horario
                         {
-                            Data = data,
-                            Hora = hora,
-                            Disponivel = disponivel
+                            Data = data.Add(hora), // Adiciona o horário à data
+                            Disponivel = disponivel,
                         };
 
                         await _context.Horarios.AddAsync(horario);

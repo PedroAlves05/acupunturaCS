@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewAcupuntura.Entities;
 
@@ -27,7 +28,7 @@ namespace NewAcupuntura.Controllers
             }
 
             var horarioExistente = _context.Horarios
-                .Any(h => h.Data == novoHorario.Data && h.Hora == novoHorario.Hora);
+                .Any(h => h.Data == novoHorario.Data); // Verificação baseada apenas na data, que inclui hora
 
             if (horarioExistente)
             {
@@ -35,7 +36,7 @@ namespace NewAcupuntura.Controllers
             }
 
             _context.Horarios.Add(novoHorario);
-            _context.SaveChanges(); 
+            _context.SaveChanges();
 
             return CreatedAtAction(nameof(GetHorarioById), new { id = novoHorario.Id }, novoHorario);
         }
@@ -59,7 +60,7 @@ namespace NewAcupuntura.Controllers
             var agora = DateTime.Now;
 
             var horarios = _context.Horarios
-                .Where(h => h.Data.Date == dia.Date && h.Disponivel == true && h.Data > agora) // Verifica se o horário está disponível e à frente de DateTime.Now
+                .Where(h => h.Data.Date == dia.Date && h.Disponivel == true && h.Data > agora) // Verifica se o horário está disponível e no futuro
                 .ToList();
 
             if (horarios == null || horarios.Count == 0)
@@ -69,6 +70,5 @@ namespace NewAcupuntura.Controllers
 
             return Ok(horarios);
         }
-        
     }
 }

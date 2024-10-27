@@ -1,19 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NewAcupuntura.Entities;
-using NewAcupuntura.requests;
+using NewAcupuntura.requests; // Corrigido para 'Requests'
 
 namespace NewAcupuntura.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
     public class ConsultaController : ControllerBase
     {
         private readonly AcupunturaDbContext _context;
@@ -24,18 +21,29 @@ namespace NewAcupuntura.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AgendarConsulta([FromBody] RequestAgendarConsultaJson pedido)
+        public async Task<IActionResult> AgendarConsulta(RequestAgendarConsultaJson pedido)
         {
-            // Buscar exame e horário pelo ID
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            // Validação e conversão manual da data
+            if (!DateTime.TryParseExact(pedido.Data, "dd/MM/yyyyTHH:mm:ss", 
+                                        System.Globalization.CultureInfo.InvariantCulture, 
+                                        System.Globalization.DateTimeStyles.None, 
+                                        out var dataConsulta))
+            {
+                return BadRequest("Formato de data inválido.");
+            }
+
+            // Buscar exame pelo ID
             var exame = await _context.Exames.FindAsync(pedido.ExameId);
             if (exame == null)
             {
                 return NotFound("Exame não encontrado.");
             }
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+            // Buscar horário pela data e hora fornecidas
             var horarioSelecionado = await _context.Horarios
-                .FirstOrDefaultAsync(h => h.Data == pedido.Data && h.Hora == pedido.Hora);
+                .FirstOrDefaultAsync(h => h.Data == dataConsulta);
             if (horarioSelecionado == null)
             {
                 return NotFound("Horário não encontrado.");
@@ -58,8 +66,8 @@ namespace NewAcupuntura.Controllers
             await _context.SaveChangesAsync();
 
             // Calcular horário final
-            var horarioAgendamento = horarioSelecionado.Hora;
-            var duracaoExame = exame.Duracao; // Supondo que 'Duracao' seja TimeSpan
+            var horarioAgendamento = horarioSelecionado.Data; 
+            var duracaoExame = exame.Duracao; 
             var horarioFinal = horarioAgendamento + duracaoExame;
 
             var horarioAtual = horarioAgendamento;
@@ -68,7 +76,7 @@ namespace NewAcupuntura.Controllers
             while (horarioAtual < horarioFinal)
             {
                 var horarioParaAtualizar = await _context.Horarios
-                    .FirstOrDefaultAsync(h => h.Data == pedido.Data && h.Hora == horarioAtual);
+                    .FirstOrDefaultAsync(h => h.Data == horarioAtual);
 
                 if (horarioParaAtualizar != null)
                 {
@@ -84,6 +92,7 @@ namespace NewAcupuntura.Controllers
 
             return Ok("Pedido de exame concluído com sucesso.");
         }
+
 
         [HttpPut("{id}/cancelar")]
         public async Task<IActionResult> CancelarConsulta(int id)
@@ -120,7 +129,7 @@ namespace NewAcupuntura.Controllers
         {
             // Busca todas as consultas associadas ao usuarioId fornecido
             var consultas = _context.Consultas
-                .Where(c => c.UsuarioId == usuarioId)
+                .Where(c => c.UsuarioId == usuarioId && c.Cancelado == false)
                 .Include(c => c.Usuario)
                 .Include(c => c.Exame)   // Inclui informações relacionadas ao exame
                 .Include(c => c.Horario) // Inclui informações relacionadas ao horário
@@ -138,16 +147,67 @@ namespace NewAcupuntura.Controllers
                 Usuario = new {
                     c.Usuario?.Id,
                     c.Usuario?.Email,
-                    c.Usuario?.UserName, // ou qualquer outro campo que você deseje incluir
-                    c.Usuario?.Nome // Adicione mais campos conforme necessário
+                    c.Usuario?.UserName,
+                    c.Usuario?.Nome,
+                    c.Usuario?.PhoneNumber
                 },
                 Exame = new {
                     c.Exame?.Id,
-                    c.Exame?.Nome
+                    c.Exame?.Nome,
+                    c.Exame?.Preco
                 },
                 Horario = new {
                     c.Horario?.Id,
-                    c.Horario?.Data
+                    c.Horario?.Data // Aqui, o horário é representado apenas pela Data
+                },
+                c.Cancelado
+            });
+
+            return Ok(response);
+        }
+        
+
+        [HttpGet("pendentes")]
+        public IActionResult PegarConsultasPendentesPorUsuario()
+        {
+            var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                return Unauthorized(new { Message = "Usuário não autenticado." });
+            }
+
+            // Busca todas as consultas associadas ao usuarioId fornecido
+            var consultas = _context.Consultas
+                .Where(c => c.UsuarioId == usuarioId && c.Horario.Data > DateTime.Now && c.Cancelado == false)
+                .Include(c => c.Usuario)
+                .Include(c => c.Exame)
+                .Include(c => c.Horario)
+                .ToList();
+
+            if (consultas == null || consultas.Count == 0)
+            {
+                return NotFound("Nenhuma consulta encontrada para este usuário.");
+            }
+
+            // Mapeamento opcional da resposta
+            var response = consultas.Select(c => new {
+                c.Id,
+                c.UsuarioId,
+                Usuario = new {
+                    c.Usuario?.Id,
+                    c.Usuario?.Email,
+                    c.Usuario?.UserName,
+                    c.Usuario?.Nome
+                },
+                Exame = new {
+                    c.Exame?.Id,
+                    c.Exame?.Nome,
+                    c.Exame?.Preco
+                },
+                Horario = new {
+                    c.Horario?.Id,
+                    c.Horario?.Data // Aqui, o horário é representado apenas pela Data
                 },
                 c.Cancelado
             });
@@ -155,40 +215,45 @@ namespace NewAcupuntura.Controllers
             return Ok(response);
         }
 
-        [HttpGet("usuario")]
-        public IActionResult PegarConsultasPorUsuario()
+        [HttpGet("finalizadas")]
+        public IActionResult PegarConsultaFinalizadasPorUsuario()
         {
             var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                return Unauthorized(new { Message = "Usuário não autenticado." });
+            }
             // Busca todas as consultas associadas ao usuarioId fornecido
             var consultas = _context.Consultas
-                .Where(c => c.UsuarioId == usuarioId)
+                .Where(c => c.UsuarioId == usuarioId && c.Horario.Data < DateTime.Now && c.Cancelado == false)
                 .Include(c => c.Usuario)
-                .Include(c => c.Exame)   // Inclui informações relacionadas ao exame
-                .Include(c => c.Horario) // Inclui informações relacionadas ao horário
+                .Include(c => c.Exame)
+                .Include(c => c.Horario)
                 .ToList();
 
             if (consultas == null || consultas.Count == 0)
             {
-                return NotFound(new { Message = "Nenhuma consulta encontrada para este usuário." });
+                return NotFound("Nenhuma consulta encontrada para este usuário.");
             }
 
-            // Mapeamento opcional da resposta (se precisar customizar o retorno)
+            // Mapeamento opcional da resposta
             var response = consultas.Select(c => new {
                 c.Id,
                 c.UsuarioId,
                 Usuario = new {
                     c.Usuario?.Id,
                     c.Usuario?.Email,
-                    c.Usuario?.UserName, // ou qualquer outro campo que você deseje incluir
-                    c.Usuario?.Nome // Adicione mais campos conforme necessário
+                    c.Usuario?.UserName,
+                    c.Usuario?.Nome
                 },
                 Exame = new {
                     c.Exame?.Id,
-                    c.Exame?.Nome
+                    c.Exame?.Nome,
+                    c.Exame?.Preco
                 },
                 Horario = new {
                     c.Horario?.Id,
-                    c.Horario?.Data
+                    c.Horario?.Data // Aqui, o horário é representado apenas pela Data
                 },
                 c.Cancelado
             });
@@ -202,9 +267,10 @@ namespace NewAcupuntura.Controllers
             // Filtra as consultas pela data específica
             var consultas = _context.Consultas
                 .Where(c => c.Horario.Data.Date == data.Date)
-                .Include(c => c.Usuario) // Supondo que `Horario.Data` é do tipo DateTime
-                .Include(c => c.Exame)   // Inclui informações relacionadas ao exame
-                .Include(c => c.Horario) // Inclui informações relacionadas ao horário
+                .Include(c => c.Usuario)
+                .Include(c => c.Exame)
+                .Include(c => c.Horario)
+                .OrderBy(c => c.Horario.Data)
                 .ToList();
 
             if (consultas == null || consultas.Count == 0)
@@ -212,15 +278,15 @@ namespace NewAcupuntura.Controllers
                 return NotFound(new { Message = "Nenhuma consulta encontrada para o dia especificado." });
             }
 
-            // Mapeamento opcional da resposta (se precisar customizar o retorno)
+            // Mapeamento opcional da resposta
             var response = consultas.Select(c => new {
                 c.Id,
                 c.UsuarioId,
                 Usuario = new {
                     c.Usuario?.Id,
                     c.Usuario?.Email,
-                    c.Usuario?.UserName, // ou qualquer outro campo que você deseje incluir
-                    c.Usuario?.Nome // Adicione mais campos conforme necessário
+                    c.Usuario?.UserName,
+                    c.Usuario?.Nome
                 },
                 Exame = new {
                     c.Exame?.Id,
@@ -228,12 +294,53 @@ namespace NewAcupuntura.Controllers
                 },
                 Horario = new {
                     c.Horario?.Id,
-                    c.Horario?.Data
+                    c.Horario?.Data // Aqui, o horário é representado apenas pela Data
                 },
                 c.Cancelado
             });
 
             return Ok(response);
         }
+
+        [HttpGet("todas-consultas")]
+        public IActionResult PegarTodasConsultas()
+        {
+            // Busca todas as consultas e ordena de forma decrescente pela data da consulta
+            var consultas = _context.Consultas
+                .Include(c => c.Usuario)
+                .Include(c => c.Exame)
+                .Include(c => c.Horario)
+                .OrderByDescending(c => c.Horario.Data)
+                .ToList();
+
+            if (consultas == null || consultas.Count == 0)
+            {
+                return NotFound(new { Message = "Nenhuma consulta encontrada." });
+            }
+
+            // Mapeamento opcional da resposta
+            var response = consultas.Select(c => new {
+                c.Id,
+                c.UsuarioId,
+                Usuario = new {
+                    c.Usuario?.Id,
+                    c.Usuario?.Email,
+                    c.Usuario?.UserName,
+                    c.Usuario?.Nome
+                },
+                Exame = new {
+                    c.Exame?.Id,
+                    c.Exame?.Nome
+                },
+                Horario = new {
+                    c.Horario?.Id,
+                    c.Horario?.Data // Representado pela Data
+                },
+                c.Cancelado
+            });
+
+            return Ok(response);
+        }
+
     }
 }

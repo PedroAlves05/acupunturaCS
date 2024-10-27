@@ -15,8 +15,6 @@ namespace NewAcupuntura.Entities
         [Required]
         public DateTime Data { get; set; } // Usando DateTime para armazenar a data
 
-        [Required]
-        public TimeSpan Hora { get; set; } // Usando TimeSpan para representar a hora
 
         [Required]
         public bool Disponivel { get; set; } = true; // Default como True

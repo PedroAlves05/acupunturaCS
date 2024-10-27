@@ -17,6 +17,9 @@ namespace NewAcupuntura.Entities
 
         [Required]
         public float Preco { get; set; }
+        
+        [Required]
+        public string? Descricao { get; set; }
 
         [Required]
         public TimeSpan Duracao { get; set; }

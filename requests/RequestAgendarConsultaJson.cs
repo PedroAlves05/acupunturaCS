@@ -7,10 +7,8 @@ namespace NewAcupuntura.requests
 {
     public class RequestAgendarConsultaJson
     {
-
         public int ExameId { get; set; }
-        public DateTime Data { get; set; }
-        public TimeSpan Hora { get; set; }
-
+        public string Data { get; set; } // Data como string para converter no controller
     }
+
 }

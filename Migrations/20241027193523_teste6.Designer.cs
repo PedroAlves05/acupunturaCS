@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NewAcupuntura;
 
@@ -10,9 +11,11 @@ using NewAcupuntura;
 namespace NewAcupuntura.Migrations
 {
     [DbContext(typeof(AcupunturaDbContext))]
-    partial class AcupunturaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241027193523_teste6")]
+    partial class teste6
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -215,170 +218,6 @@ namespace NewAcupuntura.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("NewAcupuntura.Entities.Atendimento", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Agressividade")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Alcool")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Alergia")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<double>("Altura")
-                        .HasColumnType("REAL");
-
-                    b.Property<bool>("AtividadeFisica")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Auditivo")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Ciatico")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Concordo")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ConsultaId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Coracao")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Darwin")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Doenca")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("Drogas")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Estomago")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Figado")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Filhos")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Fumante")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Garganta")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Genital")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Gonadas")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Joelho")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Mandibular")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Meditacao")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Medular")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("MembrosInferiores")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("MembrosSuperiores")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("MetodoDePagamento")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MoraComQuem")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Observacao")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("Occipital")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Olfato")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Olho")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Ombro")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Pancreas")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Pele")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<double>("Peso")
-                        .HasColumnType("REAL");
-
-                    b.Property<bool>("PressaoAlta")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("PressaoBaixa")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Pulmoes")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("QuantidadeSessoes")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Queixa")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("Retal")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Rim")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Sintase")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Talamo")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TipoDeTratamento")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("Tragus")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Trigemios")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Vegetariano")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("data")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConsultaId")
-                        .IsUnique();
-
-                    b.ToTable("Atendimentos");
-                });
-
             modelBuilder.Entity("NewAcupuntura.Entities.Consulta", b =>
                 {
                     b.Property<int>("Id")
@@ -532,17 +371,6 @@ namespace NewAcupuntura.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("NewAcupuntura.Entities.Atendimento", b =>
-                {
-                    b.HasOne("NewAcupuntura.Entities.Consulta", "Consulta")
-                        .WithMany()
-                        .HasForeignKey("ConsultaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Consulta");
                 });
 
             modelBuilder.Entity("NewAcupuntura.Entities.Consulta", b =>

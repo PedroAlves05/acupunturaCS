@@ -264,22 +264,27 @@ namespace NewAcupuntura.Controllers
         [HttpGet("consultas-por-dia/{data}")]
         public IActionResult PegarConsultasPorDia(DateTime data)
         {
-            // Filtra as consultas pela data específica
+            // Filtra as consultas pela data específica e que não estão canceladas
             var consultas = _context.Consultas
-                .Where(c => c.Horario.Data.Date == data.Date)
+                .Where(c => c.Horario.Data.Date == data.Date && c.Cancelado == false)
                 .Include(c => c.Usuario)
                 .Include(c => c.Exame)
                 .Include(c => c.Horario)
+                .ToList();
+
+            // Filtra as consultas que têm atendimentos cadastrados
+            var consultasFiltradas = consultas
+                .Where(c => !_context.Atendimentos.Any(a => a.ConsultaId == c.Id))
                 .OrderBy(c => c.Horario.Data)
                 .ToList();
 
-            if (consultas == null || consultas.Count == 0)
+            if (consultasFiltradas == null || consultasFiltradas.Count == 0)
             {
                 return NotFound(new { Message = "Nenhuma consulta encontrada para o dia especificado." });
             }
 
             // Mapeamento opcional da resposta
-            var response = consultas.Select(c => new {
+            var response = consultasFiltradas.Select(c => new {
                 c.Id,
                 c.UsuarioId,
                 Usuario = new {
@@ -302,24 +307,31 @@ namespace NewAcupuntura.Controllers
             return Ok(response);
         }
 
+
         [HttpGet("todas-consultas")]
         public IActionResult PegarTodasConsultas()
         {
-            // Busca todas as consultas e ordena de forma decrescente pela data da consulta
+            // Busca todas as consultas que não estão canceladas
             var consultas = _context.Consultas
+                .Where(c => c.Cancelado == false)
                 .Include(c => c.Usuario)
                 .Include(c => c.Exame)
                 .Include(c => c.Horario)
-                .OrderByDescending(c => c.Horario.Data)
                 .ToList();
 
-            if (consultas == null || consultas.Count == 0)
+            // Filtra as consultas que têm atendimentos cadastrados
+            var consultasFiltradas = consultas
+                .Where(c => !_context.Atendimentos.Any(a => a.ConsultaId == c.Id))
+                .OrderBy(c => c.Horario.Data)
+                .ToList();
+
+            if (consultasFiltradas == null || consultasFiltradas.Count == 0)
             {
                 return NotFound(new { Message = "Nenhuma consulta encontrada." });
             }
 
             // Mapeamento opcional da resposta
-            var response = consultas.Select(c => new {
+            var response = consultasFiltradas.Select(c => new {
                 c.Id,
                 c.UsuarioId,
                 Usuario = new {
@@ -341,6 +353,7 @@ namespace NewAcupuntura.Controllers
 
             return Ok(response);
         }
+
 
     }
 }

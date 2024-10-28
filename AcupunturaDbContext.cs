@@ -19,6 +19,16 @@ namespace NewAcupuntura
         public DbSet<Horario> Horarios { get; set;}
         public DbSet<Usuario> Usuarios { get; set;}
         public DbSet<Consulta> Consultas { get; set;}
+        public DbSet<Atendimento> Atendimentos { get; set;}
         
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Atendimento>()
+                .HasIndex(a => a.ConsultaId)
+                .IsUnique(); // Garante que ConsultaId seja único
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

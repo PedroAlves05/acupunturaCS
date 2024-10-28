@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NewAcupuntura;
 
@@ -10,9 +11,11 @@ using NewAcupuntura;
 namespace NewAcupuntura.Migrations
 {
     [DbContext(typeof(AcupunturaDbContext))]
-    partial class AcupunturaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241027194848_teste7")]
+    partial class teste7
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -368,13 +371,9 @@ namespace NewAcupuntura.Migrations
                     b.Property<bool>("Vegetariano")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("data")
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ConsultaId")
-                        .IsUnique();
+                    b.HasIndex("ConsultaId");
 
                     b.ToTable("Atendimentos");
                 });
